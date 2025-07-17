@@ -36,10 +36,23 @@ export default function Admin() {
       
       if (response.ok) {
         const userData = await response.json();
-        setCurrentUser(userData);
+        // Extra security: Double-check role on frontend
+        if (userData.role === 'admin') {
+          setCurrentUser(userData);
+        } else {
+          console.warn("Access denied: User is not an admin");
+          localStorage.removeItem("auth_token"); // Clear invalid token
+          setCurrentUser(null);
+        }
+      } else {
+        console.warn("Auth check failed with status:", response.status);
+        localStorage.removeItem("auth_token"); // Clear invalid token
+        setCurrentUser(null);
       }
     } catch (error) {
       console.error("Auth check failed:", error);
+      localStorage.removeItem("auth_token"); // Clear invalid token
+      setCurrentUser(null);
     }
     setLoading(false);
   };
@@ -184,18 +197,33 @@ export default function Admin() {
     );
   }
 
-  // Check if user is admin
+  // Check if user is admin with enhanced security
   if (!currentUser || currentUser.role !== 'admin') {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Access Denied</h1>
-            <p className="text-gray-600 mb-8">You don't have permission to access this page.</p>
-            <a href="/" className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
-              Go Home
-            </a>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6 max-w-md mx-auto">
+              <h1 className="text-2xl font-bold text-red-800 mb-2">🚫 Access Denied</h1>
+              <p className="text-red-700 mb-4">This page is restricted to administrators only.</p>
+              <p className="text-sm text-red-600 mb-6">
+                {!currentUser ? "Please sign in with an admin account." : "Your current account does not have admin privileges."}
+              </p>
+              <div className="space-y-2">
+                <a href="/" className="block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                  Return to Home
+                </a>
+                {!currentUser && (
+                  <button 
+                    onClick={() => window.location.href = "/?login=true"}
+                    className="block w-full bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    Sign In
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
         <Footer />

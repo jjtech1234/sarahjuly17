@@ -132,9 +132,20 @@ export async function requireAdmin(req: Request, res: Response, next: NextFuncti
     if (err) return next(err);
     
     const user = (req as any).user;
-    if (!user || user.role !== "admin") {
+    
+    // Enhanced logging for security monitoring
+    if (!user) {
+      console.warn(`🚨 SECURITY: Admin access attempt with no user context from IP: ${req.ip || req.socket.remoteAddress}`);
       return res.status(403).json({ error: "Admin access required" });
     }
+    
+    if (user.role !== "admin") {
+      console.warn(`🚨 SECURITY: Non-admin user ${user.email} (ID: ${user.id}) attempted admin access from IP: ${req.ip || req.socket.remoteAddress}`);
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    // Log successful admin access
+    console.log(`✅ ADMIN ACCESS: User ${user.email} (ID: ${user.id}) accessed admin endpoint: ${req.method} ${req.path}`);
     
     next();
   });

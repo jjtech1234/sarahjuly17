@@ -312,8 +312,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/businesses", requireAdmin, async (req, res) => {
     try {
       const businesses = await storage.getAllBusinessesForAdmin();
+      console.log(`📊 ADMIN: ${(req as any).user.email} retrieved ${businesses.length} businesses`);
       res.json(businesses);
     } catch (error) {
+      console.error("Error fetching businesses for admin:", error);
       res.status(500).json({ error: "Failed to fetch businesses" });
     }
   });
@@ -363,8 +365,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/advertisements", requireAdmin, async (req, res) => {
     try {
       const ads = await storage.getAllAdvertisementsForAdmin();
+      console.log(`📊 ADMIN: ${(req as any).user.email} retrieved ${ads.length} advertisements`);
       res.json(ads);
     } catch (error) {
+      console.error("Error fetching advertisements for admin:", error);
       res.status(500).json({ error: "Failed to fetch advertisements" });
     }
   });
@@ -389,12 +393,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Inquiry routes
-  app.get("/api/inquiries", async (req, res) => {
+  // Inquiry routes (Admin-only access)
+  app.get("/api/inquiries", requireAdmin, async (req, res) => {
     try {
       const inquiries = await storage.getAllInquiries();
+      console.log(`📊 ADMIN: ${(req as any).user.email} retrieved ${inquiries.length} inquiries`);
       res.json(inquiries);
     } catch (error) {
+      console.error("Error fetching inquiries for admin:", error);
       res.status(500).json({ error: "Failed to fetch inquiries" });
     }
   });
